@@ -6,9 +6,9 @@ services:
 
   zeroc0d3-master:
     restart: always
-    build: ./zeroc0d3-master        
+    build: ./zeroc0d3-master
     volumes:
-      - zeroc0d3-master:/var/lib/postgresql
+      - vol-zeroc0d3-master:/var/lib/postgresql
     ports:
       - "5434:5434"
     environment:
@@ -22,13 +22,13 @@ services:
       - REPLICATION_PASS=replpassword
       - REPLICATION_SSLMODE=
 
-### PostgreSQL Container (Slave) ####################################
+### PostgreSQL Container (Slave-1) ####################################
 
-  zeroc0d3-slave:
+  zeroc0d3-slave1:
     restart: always
     build: ./zeroc0d3-slave
     volumes:
-      - zeroc0d3-slave:/var/lib/postgresql
+      - vol-zeroc0d3-slave1:/var/lib/postgresql
     ports:
       - "5435:5435"
     links:
@@ -40,21 +40,28 @@ services:
       - REPLICATION_USER=replicator
       - REPLICATION_PASS=replpassword
 
-### pgAdmin Container (Master) #######################################
+### PostgreSQL Container (Slave-2) ####################################
 
-  pgadmin:
-    build: ./pgadmin
+  zeroc0d3-slave2:
+    restart: always
+    build: ./zeroc0d3-slave
+    volumes:
+      - vol-zeroc0d3-slave2:/var/lib/postgresql
     ports:
-      - "5051:5051"
+      - "5436:5436"
     links:
-      - zeroc0d3-master
+      - zeroc0d3-master:master
+    environment:
+      - DEBUG=false
+      - REPLICATION_MODE=slave
+      - REPLICATION_HOST=master
+      - REPLICATION_USER=replicator
+      - REPLICATION_PASS=replpassword
 
 ### Volumes Setup ###########################################
 
 volumes:
-  zeroc0d3-master:
-    driver: "local"
-  zeroc0d3-slave:
-    driver: "local"
-  sessions:  ## nothing is connected to this (- ./data/sessions:/sessions)
-    driver: "local"
+    vol-zeroc0d3-master:
+    vol-zeroc0d3-slave1:
+    vol-zeroc0d3-slave2:
+    sessions:  ## nothing is connected to this (- ./data/sessions:/sessions)
